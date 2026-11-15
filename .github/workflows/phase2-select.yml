@@ -1,0 +1,24 @@
+name: phase2-select
+on: workflow_dispatch
+permissions:
+  contents: write
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: test
+        run: python phase2/test_synthetic_phase2.py
+      - name: select
+        run: python phase2/select.py --out out --res results
+      - name: commit
+        run: |
+          git config user.name "meter-bot"
+          git config user.email "meter-bot@users.noreply.github.com"
+          git add phase2/targets.csv
+          git commit -m "phase2 targets" || exit 0
+          for i in 1 2 3 4 5; do git pull --rebase -X theirs && git push && break; sleep 5; done

@@ -1,0 +1,79 @@
+name: phase2
+on:
+  workflow_dispatch:
+    inputs:
+      start:
+        description: "Πρώτη μέρα (UTC, YYYY-MM-DD)"
+        default: "2026-08-10"
+      end:
+        description: "Τελευταία μέρα (UTC, YYYY-MM-DD)"
+        default: "2026-08-10"
+permissions:
+  contents: write
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      dates: ${{ steps.m.outputs.dates }}
+    steps:
+      - id: m
+        env:
+          START: ${{ inputs.start }}
+          END: ${{ inputs.end }}
+        run: |
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import os, json
+          from datetime import date, timedelta
+          s = date.fromisoformat(os.environ["START"]); e = date.fromisoformat(os.environ["END"])
+          out = []
+          while s <= e:
+              out.append(s.isoformat()); s += timedelta(days=1)
+          assert 0 < len(out) <= 120
+          print("dates=" + json.dumps(out))
+          PY
+  day:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      max-parallel: 12
+      matrix:
+        day: ${{ fromJson(needs.plan.outputs.dates) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: test
+        run: python phase2/test_synthetic_phase2.py
+      - name: fills
+        env:
+          SQD_API_KEY: ${{ secrets.SQD_API_KEY }}
+        run: python phase2/fills.py --date ${{ matrix.day }} --out out
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p2-${{ matrix.day }}
+          path: phase2/out
+          retention-days: 7
+          if-no-files-found: ignore
+  collect:
+    needs: day
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: p2-*
+          path: phase2/out
+          merge-multiple: true
+      - name: commit
+        run: |
+          git config user.name "meter-bot"
+          git config user.email "meter-bot@users.noreply.github.com"
+          [ -d phase2/out ] || exit 0
+          git add phase2/out
+          git commit -m "phase2 out ${{ github.run_id }}" || exit 0
+          for i in 1 2 3 4 5; do git pull --rebase -X theirs && git push && break; sleep 5; done
