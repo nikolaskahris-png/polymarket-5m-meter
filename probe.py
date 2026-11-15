@@ -1,90 +1,71 @@
-"""Probe: τι φτάνει από τον GitHub runner; Γράφει probe/result.json (καμία μυστική τιμή)."""
-import gzip, json, os, sys, time, urllib.request, urllib.error
+"""Probe 2: λεπτομέρειες fee/rebate (gamma), data-api v2, docs, ρυθμός SQD σήμερα. Γράφει probe/result.json."""
+import gzip, json, os, time, urllib.request, urllib.error
 from datetime import datetime, timezone
-
 OUT = {"started": datetime.now(timezone.utc).isoformat(), "tests": {}}
 
-def get(url, headers=None, data=None, timeout=40):
+def get(url, headers=None, data=None, timeout=60):
     req = urllib.request.Request(url, data=data, headers=headers or {})
-    req.add_header("User-Agent", "polymarket-5m-meter/0.1")
-    req.add_header("Accept-Encoding", "gzip")
-    t = time.time()
+    req.add_header("User-Agent", "polymarket-5m-meter/0.1"); req.add_header("Accept-Encoding", "gzip")
     try:
         with urllib.request.urlopen(req, timeout=timeout) as r:
             raw = r.read()
-            if r.headers.get("Content-Encoding") == "gzip":
-                raw = gzip.decompress(raw)
-            return {"status": r.status, "bytes": len(raw), "secs": round(time.time() - t, 2),
-                    "hdr": {k: v for k, v in r.headers.items() if k.lower().startswith("x-sqd") or k.lower() == "retry-after"}, "body": raw}
+            if r.headers.get("Content-Encoding") == "gzip": raw = gzip.decompress(raw)
+            return r.status, raw
     except urllib.error.HTTPError as e:
-        b = e.read()[:300]
-        return {"status": e.code, "bytes": len(b), "secs": round(time.time() - t, 2), "hdr": {}, "body": b}
+        return e.code, e.read()[:2000]
     except Exception as e:
-        return {"status": None, "error": repr(e)[:200], "secs": round(time.time() - t, 2), "hdr": {}, "body": b""}
+        return None, repr(e).encode()
 
-def rec(name, r, keep_body=False, extra=None):
-    d = {k: v for k, v in r.items() if k != "body"}
-    if keep_body: d["body_head"] = r["body"][:400].decode("utf-8", "replace")
-    if extra: d.update(extra)
-    OUT["tests"][name] = d
-    print(name, d.get("status"), d.get("bytes"), flush=True)
+def save(name, status, body, n=3500):
+    OUT["tests"][name] = {"status": status, "bytes": len(body), "head": body[:n].decode("utf-8", "replace")}
+    print(name, status, len(body), flush=True)
 
-# 1. gamma: μία πρόσφατη και μία παλιά (Αύγουστος) αγορά
-now = int(time.time()); T_recent = (now // 300) * 300 - 3600
-T_old = 1786320000 // 300 * 300  # ~2026-08-10
+T_old = 1786320000 // 300 * 300
+st, b = get(f"https://gamma-api.polymarket.com/events?slug=btc-updown-5m-{T_old}")
 cond = None
-for name, T in (("gamma_recent", T_recent), ("gamma_old", T_old)):
-    r = get(f"https://gamma-api.polymarket.com/events?slug=btc-updown-5m-{T}")
-    ex = {}
-    try:
-        j = json.loads(r["body"]); m = j[0]["markets"][0]
-        ex = {"conditionId": m.get("conditionId"), "clobTokenIds": m.get("clobTokenIds"), "outcomes": m.get("outcomes"),
-              "outcomePrices": m.get("outcomePrices"), "closed": m.get("closed"), "volume": m.get("volume"), "keys": sorted(m.keys())[:80]}
-        if name == "gamma_old": cond = m.get("conditionId")
-    except Exception as e:
-        ex = {"parse_error": repr(e)[:150]}
-    rec(name, r, keep_body=not ex.get("conditionId"), extra=ex)
-    time.sleep(0.5)
+try:
+    ev = json.loads(b)[0]; m = ev["markets"][0]; cond = m["conditionId"]
+    OUT["tests"]["gamma_fee_fields"] = {k: m.get(k) for k in ("feeSchedule", "feeType", "feesEnabled", "makerBaseFee", "takerBaseFee", "makerRebatesFeeShareBps",
+        "version", "negRisk", "closedTime", "eventStartTime", "endDate", "startDate", "volume", "volumeNum", "volumeClob", "resolutionSource", "cryptoMarketConfig", "umaResolutionStatus", "orderPriceMinTickSize")}
+    OUT["tests"]["gamma_event_fields"] = {k: ev.get(k) for k in ("slug", "startDate", "endDate", "volume", "closed", "seriesSlug", "eventMetadata", "cryptoMarketConfig")}
+except Exception as e:
+    save("gamma_old_raw", st, b)
 
-# 2. data-api
-if cond:
-    r = get(f"https://data-api.polymarket.com/trades?market={cond}&limit=5")
-    rec("data_api_trades", r, keep_body=True)
-r = get("https://clob.polymarket.com/time"); rec("clob_time", r, keep_body=True)
+for name, url in (
+    ("data_v2_root", "https://data-api.polymarket.com/v2/"),
+    ("data_v2_trades_market", f"https://data-api.polymarket.com/v2/trades?market={cond}&limit=3"),
+    ("data_v2_trades_cond", f"https://data-api.polymarket.com/v2/trades?conditionId={cond}&limit=3"),
+    ("docs_data_api_overview", "https://docs.polymarket.com/api-reference/data-api/overview.md"),
+    ("docs_llms", "https://docs.polymarket.com/llms.txt"),
+):
+    st, b = get(url); save(name, st, b, 2500 if name != "docs_llms" else 6000); time.sleep(0.4)
 
-# 3. Hugging Face (εφεδρική πηγή αγορών)
-r = get("https://huggingface.co/api/datasets/aliplayer1/polymarket-crypto-updown"); rec("hf_dataset_api", r)
-
-# 4. SQD: μικρό δείγμα + μέτρηση μεγέθους
+# SQD: ρυθμός blocks και πυκνότητα σήμερα
 EX = ["0xE111180000d2663C0091e4f400237545B87B996B", "0xe2222d279d744050d28e00520010520000310F59",
       "0xe2222d002000ba0053cef3375333610f64600036", "0xe3333700cA9d93003F00f0F71f8515005F6c00Aa"]
 TOPIC_FILLED = "0xd543adfd945773f1a62f74f0ee55a5e3b9b1a28262980ba90b1a89f2ea84d8ee"
-def sqd(frm, to, topics=True, key=None):
+def sqd(frm, to):
     body = {"type": "evm", "fromBlock": frm, "toBlock": to,
             "fields": {"block": {"number": True, "timestamp": True}, "log": {"address": True, "topics": True, "data": True}},
-            "logs": [dict({"address": EX}, **({"topic0": [TOPIC_FILLED]} if topics else {}))]}
-    h = {"content-type": "application/json"}
-    if key: h["Authorization"] = "Bearer " + key
-    return get("https://portal.sqd.dev/datasets/polygon-mainnet/stream", headers=h, data=json.dumps(body).encode(), timeout=120)
-
-for attempt in range(4):
-    r = sqd(89900000, 89900299)
-    if r["status"] == 200: break
-    time.sleep(12)
-nlog = nblk = 0; last = None
-if r["status"] == 200:
-    for line in r["body"].splitlines():
-        if not line.strip(): continue
-        o = json.loads(line); nblk += 1; last = o["header"]["number"]; nlog += len(o.get("logs", []))
-rec("sqd_300_blocks_nokey", r, extra={"blocks_returned": nblk, "logs": nlog, "last_block": last,
-    "est_bytes_per_day_this_density": int(r.get("bytes", 0) / max(nblk, 1) * 43200)})
-key = os.environ.get("SQD_API_KEY")
-if key:
-    r2 = sqd(89900000, 89900299, key=key)
-    rec("sqd_300_blocks_withkey", r2)
-else:
-    OUT["tests"]["sqd_300_blocks_withkey"] = "no SQD_API_KEY in this run"
-
+            "logs": [{"address": EX, "topic0": [TOPIC_FILLED]}]}
+    for a in range(5):
+        st, b = get("https://portal.sqd.dev/datasets/polygon-mainnet/stream", {"content-type": "application/json"}, json.dumps(body).encode(), 120)
+        if st == 200: return st, b
+        time.sleep(11)
+    return st, b
+for name, frm in (("sqd_today_97300000", 97300000), ("sqd_oct_95000000", 95000000), ("sqd_aug_91150000", 91150000)):
+    st, b = sqd(frm, frm + 299); info = {"status": st, "bytes": len(b)}
+    if st == 200:
+        hs = [json.loads(l) for l in b.splitlines() if l.strip()]
+        info.update({"blocks": len(hs), "logs": sum(len(h.get("logs", [])) for h in hs), "first_block": hs[0]["header"], "last_block": hs[-1]["header"]})
+        if len(hs) > 1:
+            dt = hs[-1]["header"]["timestamp"] - hs[0]["header"]["timestamp"]; dn = hs[-1]["header"]["number"] - hs[0]["header"]["number"]
+            info["secs_per_block"] = round(dt / dn, 4) if dn else None
+        cnt = {}
+        for h in hs:
+            for l in h.get("logs", []): cnt[l["address"]] = cnt.get(l["address"], 0) + 1
+        info["by_address"] = cnt
+    OUT["tests"][name] = info; print(name, info.get("status"), flush=True)
 os.makedirs("probe", exist_ok=True)
 json.dump(OUT, open("probe/result.json", "w"), indent=1, ensure_ascii=False)
 print("done")
