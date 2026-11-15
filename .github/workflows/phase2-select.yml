@@ -14,7 +14,7 @@ jobs:
       - name: test
         run: python phase2/test_synthetic_phase2.py
       - name: select
-        run: python phase2/select.py --out out --res results
+        run: python phase2/pick_targets.py --out out --res results
       - name: commit
         run: |
           git config user.name "meter-bot"
