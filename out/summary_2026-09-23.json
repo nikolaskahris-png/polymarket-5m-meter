@@ -1,0 +1,10 @@
+{
+ "day": "2026-09-23",
+ "markets": 288,
+ "missing_windows": [],
+ "unclear_results": [],
+ "stream_requests": 64,
+ "logs_scanned": 4400295,
+ "logs_matched": 1335230,
+ "wallets": 8263
+}
