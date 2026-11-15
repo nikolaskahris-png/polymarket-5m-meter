@@ -1,0 +1,121 @@
+{
+ "market": "btc-updown-5m-1786355100",
+ "cond": "0x01c278996b25d8dda2693dd71ee479bfb440f74a0766b7a12a4f7d5bb88f74c5",
+ "gamma_volume": 55494.415117,
+ "winner_gamma": "Down",
+ "final_price": 64917.750700540535,
+ "price_to_beat": 64993.462031342824,
+ "winner_from_prices": "Down",
+ "sqd": {
+  "rows": 5724,
+  "shares_taker_rows": 55406.5735,
+  "usd_taker_rows": 27424.9254,
+  "shares_maker_rows": 55406.5735,
+  "usd_maker_rows": 28963.0263,
+  "fee_words_all_rows": 438.89865,
+  "fee_words_taker_rows": 437.0548,
+  "fee_formula_total_taker_rows": 420.175646,
+  "fills_by_hour_rel_window_start": {
+   "-4": 4,
+   "-2": 2,
+   "-1": 371,
+   "0": 5347
+  }
+ },
+ "data_api": {
+  "rows": 1956,
+  "sum_size": 55494.4151,
+  "sum_size_x_price": 27468.4854,
+  "pages": 4
+ },
+ "key_match": {
+  "data_api_keys": 1956,
+  "sqd_keys": 5573,
+  "match": 1945,
+  "count_differs": 11,
+  "size_differs": 0,
+  "only_in_sqd": 3628
+ },
+ "sample_mismatch": [
+  [
+   "0x2ce048f949",
+   "0xb322462a",
+   "data_api 1 rows vs sqd 0",
+   3.92,
+   0.0
+  ],
+  [
+   "0x0d1c5c168f",
+   "0xb322462a",
+   "data_api 1 rows vs sqd 0",
+   3.9216,
+   0.0
+  ],
+  [
+   "0xaca9e81aba",
+   "0x3387ac61",
+   "data_api 1 rows vs sqd 0",
+   40.0,
+   0.0
+  ],
+  [
+   "0x7dce028003",
+   "0x3387ac61",
+   "data_api 1 rows vs sqd 0",
+   5.0,
+   0.0
+  ],
+  [
+   "0x90594c60a0",
+   "0x3387ac61",
+   "data_api 1 rows vs sqd 0",
+   5.0,
+   0.0
+  ],
+  [
+   "0xfba02f12af",
+   "0x3387ac61",
+   "data_api 1 rows vs sqd 0",
+   5.0,
+   0.0
+  ]
+ ],
+ "sample_only_in_sqd": [
+  [
+   "0xd4f3334ebe",
+   "0xd97ae021",
+   1,
+   9.8039
+  ],
+  [
+   "0x6513e6d96f",
+   "0x60fdbf14",
+   1,
+   9.8
+  ],
+  [
+   "0xafba2ee132",
+   "0x60fdbf14",
+   1,
+   2.0
+  ],
+  [
+   "0xe34faad9ee",
+   "0xd97ae021",
+   1,
+   30.39
+  ],
+  [
+   "0xe34faad9ee",
+   "0x60fdbf14",
+   1,
+   9.61
+  ],
+  [
+   "0xce5526f828",
+   "0x60fdbf14",
+   1,
+   9.8039
+  ]
+ ]
+}
