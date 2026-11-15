@@ -38,7 +38,7 @@ def http(url, data=None, headers=None, timeout=120, tries=6):
         except urllib.error.HTTPError as e:
             last = f"HTTP {e.code}"
             if e.code in (429, 502, 503, 504, 529):
-                time.sleep(min(float(e.headers.get("Retry-After") or 10), 60) + a * 2); continue
+                time.sleep(min(float(e.headers.get("Retry-After") or 10) + a, 45)); continue
             if e.code in (404, 400, 410): raise
             time.sleep(3 + a * 3)
         except Exception as e:
@@ -54,7 +54,7 @@ def sqd_post(frm, to, with_tx=False):
     h = {"content-type": "application/json"}
     key = os.environ.get("SQD_API_KEY")
     if key: h["Authorization"] = "Bearer " + key
-    return http(SQD, json.dumps(body).encode(), h)
+    return http(SQD, json.dumps(body).encode(), h, tries=40)
 
 def find_block(ts):
     """Block με timestamp εντός ±4s από ts, με διόρθωση από πραγματικές κεφαλίδες."""
@@ -152,7 +152,7 @@ def process(day, pre_h, post_h, verify, outdir):
                 if verify: vrows[mi].append((lg.get("transactionHash"), maker, tk, round(sh, 6), is_taker_row, side, round(p, 6), fee))
         if last is None: raise RuntimeError(f"κενή απάντηση στο block {cur}")
         cur = last + 1
-        if nreq % 40 == 0: print(f"req {nreq} block {cur} logs {nlogs} matched {nmatch}", flush=True)
+        if nreq % 10 == 0: print(f"req {nreq} block {cur} logs {nlogs} matched {nmatch}", flush=True)
     print(f"done stream: reqs {nreq}, logs {nlogs}, matched {nmatch}", flush=True)
 
     # ---------- σύνοψη ανά πορτοφόλι ----------
