@@ -78,6 +78,7 @@ jobs:
         run: |
           git config user.name "meter-bot"
           git config user.email "meter-bot@users.noreply.github.com"
+          [ -d out ] || exit 0
           git add out
           git commit -m "out ${{ github.run_id }}" || exit 0
           for i in 1 2 3 4 5; do git pull --rebase -X theirs && git push && break; sleep 5; done
