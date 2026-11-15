@@ -1,0 +1,28 @@
+{
+ "period": [
+  "2026-08-07",
+  "2026-11-14"
+ ],
+ "days": 100,
+ "wallets_total": 130042,
+ "wallets_tested": 1792,
+ "pass_BH": 183,
+ "winners": 140,
+ "usd_total_all_wallets": -11153489.36,
+ "winners_usd_total": 4297495.69,
+ "winners_usd_per_month": 1308050.25,
+ "eur_per_usd_inverse_rate_USD_per_EUR": 1.1390887323943661,
+ "ecb_days_or_err": 71,
+ "winners_eur_per_month": 1148330.4275628463,
+ "oos_winners_selected_first_half": 131,
+ "oos_usd_second_half": 1329339.29,
+ "oos_eur_per_month": 710423.4035303422,
+ "stop_rule_a_below_5000": false,
+ "stop_rule_b_no_wallet_passes": false,
+ "before_after": {
+  "winners_with_100plus_before": 101,
+  "of_which_positive_before": 84,
+  "wallets_in_both": 29269,
+  "spearman_net": 0.2503847142035987
+ }
+}
