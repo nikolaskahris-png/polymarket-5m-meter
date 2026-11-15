@@ -231,7 +231,7 @@ def do_verify(day, markets, mstat, vrows, outdir):
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--date", required=True); ap.add_argument("--out", default="out")
-    ap.add_argument("--pre-hours", type=int, default=24); ap.add_argument("--post-hours", type=int, default=2)
+    ap.add_argument("--pre-hours", type=int, default=3); ap.add_argument("--post-hours", type=int, default=2)
     ap.add_argument("--verify", action="store_true")
     a = ap.parse_args()
     process(a.date, a.pre_hours, a.post_hours, a.verify, a.out)
