@@ -1,0 +1,30 @@
+name: phase3-probe
+on:
+  workflow_dispatch:
+    inputs:
+      minutes:
+        description: "Λεπτά δοκιμής"
+        default: "15"
+permissions:
+  contents: write
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: deps
+        run: pip install "websockets==13.1"
+      - name: probe
+        run: python phase3/probe.py --minutes ${{ inputs.minutes }}
+      - name: commit
+        if: always()
+        run: |
+          git config user.name "meter-bot"
+          git config user.email "meter-bot@users.noreply.github.com"
+          git add phase3/probe || exit 0
+          git commit -m "phase3 probe" || exit 0
+          for i in 1 2 3 4 5; do git pull --rebase -X theirs && git push && break; sleep 5; done
