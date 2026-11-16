@@ -1,0 +1,144 @@
+{
+ "started": 1794833275.9679255,
+ "minutes": 15.0,
+ "errors": [],
+ "connect": "ok",
+ "markets": [
+  {
+   "T": 1794833100,
+   "outcomes": [
+    "Up",
+    "Down"
+   ],
+   "ok": true
+  },
+  {
+   "T": 1794833400,
+   "outcomes": [
+    "Up",
+    "Down"
+   ],
+   "ok": true
+  },
+  {
+   "T": 1794833700,
+   "outcomes": [
+    "Up",
+    "Down"
+   ],
+   "ok": true
+  },
+  {
+   "T": 1794834000,
+   "outcomes": [
+    "Up",
+    "Down"
+   ],
+   "ok": true
+  },
+  {
+   "T": 1794834300,
+   "outcomes": [
+    "Up",
+    "Down"
+   ],
+   "ok": true
+  },
+  {
+   "T": 1794834600,
+   "outcomes": [
+    "Up",
+    "Down"
+   ],
+   "ok": true
+  }
+ ],
+ "types": {
+  "book": 11168,
+  "price_change": 866185,
+  "best_bid_ask": 15152,
+  "last_trade_price": 5575,
+  "PONG": 89,
+  "new_market": 152,
+  "tick_size_change": 12,
+  "market_resolved": 3
+ },
+ "bytes": 580385227,
+ "msgs": 898328,
+ "per_min": [
+  20165408,
+  19354488,
+  38395715,
+  41768311,
+  45171669,
+  49851582,
+  30606282,
+  42184628,
+  46794248,
+  46482779,
+  51978027,
+  47513500,
+  31965856,
+  32936247
+ ],
+ "rest_cmp": {
+  "A": {
+   "levels_equal": 1888,
+   "levels": 1953,
+   "share": 0.9667178699436764
+  },
+  "B": {
+   "levels_equal": 677,
+   "levels": 1953,
+   "share": 0.3466461853558628
+  }
+ },
+ "rest_errors": 60,
+ "mirror": {
+  "n": 118,
+  "share_equal_1": 1.0,
+  "sample": [
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0
+  ]
+ },
+ "trade_fields": {
+  "market": 5575,
+  "asset_id": 5575,
+  "price": 5575,
+  "size": 5575,
+  "fee_rate_bps": 5575,
+  "side": 5575,
+  "timestamp": 5575,
+  "event_type": 5575,
+  "transaction_hash": 5575
+ },
+ "trade_has_hash": 5575,
+ "trades": 5575,
+ "price_change_entries": 1732370,
+ "ts_lag_ms": {
+  "n": 898247,
+  "p50": 43,
+  "p90": 49
+ },
+ "bytes_per_min": 37441124.29179915,
+ "est_GB_14_days_raw": 754.8130657226708
+}
