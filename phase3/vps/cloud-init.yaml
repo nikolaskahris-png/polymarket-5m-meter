@@ -1,0 +1,9 @@
+#cloud-config
+# Επικόλληση στο πεδίο "Cloud config" όταν φτιάχνεις τον server στη Hetzner.
+# ΑΝΤΙΚΑΤΕΣΤΗΣΕ το ΒΑΛΕ_ΕΔΩ_ΤΟ_TOKEN με το δικό σου token (μόνο εδώ, ποτέ σε αρχείο του repo).
+write_files:
+  - path: /etc/pm-meter/token
+    permissions: "0600"
+    content: ΒΑΛΕ_ΕΔΩ_ΤΟ_TOKEN
+runcmd:
+  - [bash, -c, "curl -fsSL https://raw.githubusercontent.com/nikolaskahris-png/polymarket-5m-meter/main/phase3/vps/setup.sh -o /root/setup.sh && bash /root/setup.sh > /root/setup.log 2>&1"]
